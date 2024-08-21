@@ -17,6 +17,11 @@ QUEUE_ID_UPDATE = '21/08/2024 CLOUDTIME'
 
 # Load the credentials from the base64-encoded secret
 credentials_base64 = os.getenv('GCP_CREDENTIALS')
+
+# Debugging: Check if the credentials_base64 is None
+if credentials_base64 is None:
+    raise ValueError("GCP_CREDENTIALS environment variable is not set.")
+
 credentials_json = base64.b64decode(credentials_base64).decode('utf-8')
 
 # Write the credentials to a temporary file
