@@ -2,6 +2,8 @@ import os
 import requests
 import gspread
 from google.oauth2.service_account import Credentials
+import base64
+import json
 
 # Airtable API setup using environment variables
 AIRTABLE_API_KEY = os.getenv('AIRTABLE_API_KEY')
@@ -13,10 +15,18 @@ AIRTABLE_URL = f'https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_
 GOOGLE_SHEET_ID = os.getenv('GOOGLE_SHEET_ID')
 QUEUE_ID_UPDATE = '21/08/2024 CLOUDTIME'
 
+# Load the credentials from the base64-encoded secret
+credentials_base64 = os.getenv('GCP_CREDENTIALS')
+credentials_json = base64.b64decode(credentials_base64).decode('utf-8')
+
+# Write the credentials to a temporary file
+with open('credentials.json', 'w') as creds_file:
+    creds_file.write(credentials_json)
+
 # Define the scope
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
-# Authenticate with Google Sheets using your credentials file
+# Authenticate with Google Sheets using the temporary credentials file
 creds = Credentials.from_service_account_file('credentials.json', scopes=SCOPES)
 client = gspread.authorize(creds)
 sheet = client.open_by_key(GOOGLE_SHEET_ID).sheet1
@@ -53,3 +63,6 @@ for record in records:
         print(f'Record {record_id} updated successfully.')
     else:
         print(f'Error updating record {record_id}: {update_response.content}')
+
+# Clean up by removing the temporary credentials file
+os.remove('credentials.json')
