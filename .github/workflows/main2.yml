@@ -4,6 +4,7 @@ on:
   schedule:
     # Runs every week at a specific time (2 hours after the previous one)
     - cron: '0 4 * * 1'  # This runs at 04:00 UTC every Monday
+      workflow_dispatch:
 
 jobs:
   fetch-and-send-results:
