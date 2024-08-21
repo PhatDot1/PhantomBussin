@@ -24,6 +24,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install requests gspread google-auth
 
+    - name: Decode and Save Google Credentials
+      run: echo ${{ secrets.GCP_CREDENTIALS }} | base64 --decode > credentials.json
+
     - name: Run Update Script
       env:
         AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
