@@ -4,6 +4,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 import base64
 import json
+import time
 
 # Airtable API setup using environment variables
 AIRTABLE_API_KEY = os.getenv('AIRTABLE_API_KEY')
@@ -18,7 +19,6 @@ QUEUE_ID_UPDATE = '21/08/2024 CLOUDTIME'
 # Load the credentials from the base64-encoded secret
 credentials_base64 = os.getenv('GCP_CREDENTIALS')
 
-# Debugging: Check if the credentials_base64 is None
 if credentials_base64 is None:
     raise ValueError("GCP_CREDENTIALS environment variable is not set.")
 
@@ -48,13 +48,13 @@ params = {
 response = requests.get(AIRTABLE_URL, headers=headers, params=params)
 records = response.json().get('records', [])
 
-# Process each record
+# Process each record with a delay
 for record in records:
     linkedin_url = record['fields'].get('Proper LinkedIn', '')
     
     # Add LinkedIn URL to Google Sheets
     sheet.append_row([linkedin_url])
-
+    
     # Update Queue ID in Airtable
     record_id = record['id']
     update_data = {
@@ -68,6 +68,9 @@ for record in records:
         print(f'Record {record_id} updated successfully.')
     else:
         print(f'Error updating record {record_id}: {update_response.content}')
+
+    # Wait for 6 seconds to throttle requests to 10 per minute
+    time.sleep(6)
 
 # Clean up by removing the temporary credentials file
 os.remove('credentials.json')
