@@ -46,15 +46,29 @@ params = {
 }
 
 response = requests.get(AIRTABLE_URL, headers=headers, params=params)
-records = response.json().get('records', [])
+
+# Check if the response is valid and contains records
+if response.status_code == 200:
+    records = response.json().get('records', [])
+else:
+    raise ValueError(f"Error fetching data from Airtable: {response.content}")
 
 # Process each record with a delay
 for record in records:
     linkedin_url = record['fields'].get('Proper LinkedIn', '')
     
-    # Add LinkedIn URL to Google Sheets
-    sheet.append_row([linkedin_url])
+    # Check if Proper LinkedIn URL exists
+    if not linkedin_url:
+        print(f"Skipping record {record['id']} due to missing LinkedIn URL.")
+        continue
     
+    try:
+        # Add LinkedIn URL to Google Sheets
+        sheet.append_row([linkedin_url])
+    except Exception as e:
+        print(f"Error appending LinkedIn URL to Google Sheets for record {record['id']}: {str(e)}")
+        continue
+
     # Update Queue ID in Airtable
     record_id = record['id']
     update_data = {
@@ -62,13 +76,13 @@ for record in records:
             'Queue ID': QUEUE_ID_UPDATE
         }
     }
-    update_response = requests.patch(f'{AIRTABLE_URL}/{record_id}', headers=headers, json=update_data)
 
+    update_response = requests.patch(f'{AIRTABLE_URL}/{record_id}', headers=headers, json=update_data)
     if update_response.status_code == 200:
         print(f'Record {record_id} updated successfully.')
     else:
         print(f'Error updating record {record_id}: {update_response.content}')
-
+    
     # Wait for 6 seconds to throttle requests to 10 per minute
     time.sleep(6)
 
