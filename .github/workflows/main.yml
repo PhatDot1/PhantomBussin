@@ -1,7 +1,7 @@
 name: Update Airtable to Google Sheets
 on:
   schedule:
-    - cron: '0 8 * * 1,4'
+    #- cron: '0 8 * * 1,4' KILLED
   workflow_dispatch:
 
 jobs:
